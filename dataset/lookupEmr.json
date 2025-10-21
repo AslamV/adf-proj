@@ -1,0 +1,53 @@
+{
+	"name": "lookupEmr",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "load_config.csv",
+				"fileSystem": "inputcontainer"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "database",
+				"type": "String"
+			},
+			{
+				"name": "datasource",
+				"type": "String"
+			},
+			{
+				"name": "tablename",
+				"type": "String"
+			},
+			{
+				"name": "loadtype",
+				"type": "String"
+			},
+			{
+				"name": "watermark",
+				"type": "String"
+			},
+			{
+				"name": "is_active",
+				"type": "String"
+			},
+			{
+				"name": "targetpath",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
