@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup1",
+				"name": "Get last CDC",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -28,10 +28,83 @@
 					},
 					"dataset": {
 						"referenceName": "ds_json_files",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "hsbronze",
+							"folder": "cdc",
+							"file": "cdc.json"
+						}
 					},
 					"firstRowOnly": false
 				}
+			},
+			{
+				"name": "SQLtoDataLake",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get last CDC",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select * from @{pipeline().parameters.schema}.@{pipeline().parameters.table} where @{pipeline().parameters.cdc_col} > \n    '@{activity('Get last CDC').output.value[0].cdc}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_sql_genre",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_parquet_genre",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "hsbronze",
+							"filepath": {
+								"value": "@concat('User/',pipeline().parameters.table,'_',formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'))",
+								"type": "Expression"
+							}
+						}
+					}
+				]
 			}
 		],
 		"parameters": {
